@@ -1,0 +1,2 @@
+sku,name,brand,category,url,price,original_price,in_stock  
+TEST-SKU-999,Option A Test Laptop,TestBrand,laptop,https://example.com/test-laptop,700.00,1000.00,true 

@@ -1,0 +1,2 @@
+sku,name,brand,category,url,price,original_price,in_stock  
+EXP-001,Test Product,TestBrand,laptop,https://example.com/test,1000.00,1000.00,true 

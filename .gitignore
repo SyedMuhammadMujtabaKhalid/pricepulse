@@ -1,0 +1,64 @@
+# ============================================================
+# PricePulse — .gitignore
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# --- Virtual Environment ---
+venv/
+.venv/
+env/
+
+# --- Environment Secrets ---
+.env
+.env.local
+.env.production
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+logs/*.log
+logs/*.json
+
+# --- Data (raw/processed are local only; samples are committed) ---
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/samples/
+
+# --- Database ---
+*.db
+*.sqlite3
+
+# --- Playwright ---
+playwright-report/
+test-results/
+
+# --- Coverage ---
+.coverage
+htmlcov/
+coverage.xml
+
+# --- Misc ---
+*.bak
+*.tmp
+.cache/

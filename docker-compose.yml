@@ -1,0 +1,65 @@
+# ============================================================
+# PricePulse — Docker Compose (Production)
+# ============================================================
+
+services:
+  # ---- PostgreSQL 16 ----
+  db:
+    image: postgres:16-alpine
+    container_name: pricepulse_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pricepulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pricepulse_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-pricepulse}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pricepulse_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pricepulse} -d ${POSTGRES_DB:-pricepulse}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---- Pipeline Runner ----
+  pipeline:
+    build: .
+    container_name: pricepulse_pipeline
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-pricepulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pricepulse_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-pricepulse}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pricepulse}:${POSTGRES_PASSWORD:-pricepulse_secret}@db:5432/${POSTGRES_DB:-pricepulse}
+    volumes:
+      - .:/app
+    command: ["sh", "-c", "alembic upgrade head && python scripts/run_pipeline.py"]
+
+  # ---- Streamlit Dashboard ----
+  dashboard:
+    build: .
+    container_name: pricepulse_dashboard
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-pricepulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pricepulse_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-pricepulse}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pricepulse}:${POSTGRES_PASSWORD:-pricepulse_secret}@db:5432/${POSTGRES_DB:-pricepulse}
+    ports:
+      - "8501:8501"
+    command: ["streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0"]
+
+volumes:
+  pricepulse_pgdata:
+    driver: local
