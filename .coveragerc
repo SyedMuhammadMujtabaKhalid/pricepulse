@@ -1,0 +1,7 @@
+[run]
+omit =
+    */src/storage/migrations/*
+    */src/storage/migrations/versions/*
+    */src/notifications/__init__.py
+    */src/notifications/notifiers.py
+    */src/sources/*
