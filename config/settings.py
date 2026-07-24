@@ -17,7 +17,7 @@ Engineering Decisions:
 Usage:
     from config.settings import get_settings
     settings = get_settings()
-    print(settings.database_url)
+
 """
 
 from functools import lru_cache
