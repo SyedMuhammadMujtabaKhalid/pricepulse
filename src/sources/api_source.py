@@ -13,7 +13,12 @@ Engineering Decisions:
 
 from typing import Any
 import httpx
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+from tenacity import (
+    retry,
+    wait_exponential,
+    stop_after_attempt,
+    retry_if_exception_type,
+)
 
 from src.core.logger import get_logger
 from src.sources.base import BaseSource
@@ -25,17 +30,19 @@ log = get_logger(__name__)
 class APISource(BaseSource):
     """Data source adapter for structured REST APIs."""
 
-    def __init__(self, api_url: str, source_name: str, api_key: str | None = None) -> None:
+    def __init__(
+        self, api_url: str, source_name: str, api_key: str | None = None
+    ) -> None:
         super().__init__()
         self.api_url = api_url
         self._source_name = source_name
         self.api_key = api_key
-        
+
         # We configure a shared async client for connection pooling
         headers = {"Accept": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-            
+
         self.client_kwargs = {
             "headers": headers,
             "timeout": httpx.Timeout(10.0),
@@ -53,7 +60,7 @@ class APISource(BaseSource):
         wait=wait_exponential(multiplier=1, min=2, max=10),
         stop=stop_after_attempt(3),
         retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
-        reraise=True
+        reraise=True,
     )
     async def extract(self, **kwargs: Any) -> list[RawPriceRecord]:
         """
@@ -64,15 +71,17 @@ class APISource(BaseSource):
           - Nested under 'items': {"items": [...]}
           - Nested under 'products': {"products": [...]}  (DummyJSON format)
         """
-        log.info("source.api.extract_started", source=self.source_name, url=self.api_url)
-        
+        log.info(
+            "source.api.extract_started", source=self.source_name, url=self.api_url
+        )
+
         try:
             async with httpx.AsyncClient(**self.client_kwargs) as client:
                 response = await client.get(self.api_url, params=kwargs.get("params"))
                 response.raise_for_status()
-                
+
                 data = response.json()
-                
+
                 # Support multiple common API response shapes
                 if isinstance(data, list):
                     raw_records = data
@@ -89,30 +98,36 @@ class APISource(BaseSource):
                         )
                 else:
                     raise ValueError(f"Unexpected API response type: {type(data)}")
-                
+
                 if not isinstance(raw_records, list):
                     raise ValueError(f"Expected list from API, got {type(raw_records)}")
-                
+
                 # Map API fields to RawPriceRecord schema
                 records = []
                 for item in raw_records:
                     mapped = self._map_to_record(item)
                     if mapped:
                         records.append(mapped)
-                
-                log.info("source.api.extract_success", source=self.source_name, records=len(records))
+
+                log.info(
+                    "source.api.extract_success",
+                    source=self.source_name,
+                    records=len(records),
+                )
                 return records
-                
+
         except httpx.HTTPStatusError as e:
             log.error(
-                "source.api.http_error", 
-                source=self.source_name, 
+                "source.api.http_error",
+                source=self.source_name,
                 status_code=e.response.status_code,
-                detail=e.response.text
+                detail=e.response.text,
             )
             raise
         except Exception as e:
-            log.error("source.api.extract_failed", source=self.source_name, error=str(e))
+            log.error(
+                "source.api.extract_failed", source=self.source_name, error=str(e)
+            )
             raise
 
     def _map_to_record(self, item: dict) -> RawPriceRecord | None:
@@ -134,14 +149,30 @@ class APISource(BaseSource):
                 "url": item.get("url") or item.get("thumbnail"),
                 "price": item.get("price", 0),
                 "original_price": item.get("original_price"),
-                "in_stock": item.get("in_stock", item.get("stock", 0) > 0)
+                "in_stock": (
+                    item.get("in_stock", item.get("stock", 0) > 0)
                     if isinstance(item.get("stock"), (int, float))
-                    else item.get("in_stock", True),
+                    else item.get("in_stock", True)
+                ),
                 "attributes": {
-                    k: v for k, v in item.items()
-                    if k not in ("sku", "id", "name", "title", "brand", "category",
-                                 "url", "thumbnail", "price", "original_price",
-                                 "in_stock", "stock", "images")
+                    k: v
+                    for k, v in item.items()
+                    if k
+                    not in (
+                        "sku",
+                        "id",
+                        "name",
+                        "title",
+                        "brand",
+                        "category",
+                        "url",
+                        "thumbnail",
+                        "price",
+                        "original_price",
+                        "in_stock",
+                        "stock",
+                        "images",
+                    )
                 },
             }
             return RawPriceRecord(**mapped)
@@ -162,5 +193,7 @@ class APISource(BaseSource):
                 response = await client.head(self.api_url)
                 return response.status_code < 500
         except Exception as e:
-            log.warning("source.api.health_failed", source=self.source_name, error=str(e))
+            log.warning(
+                "source.api.health_failed", source=self.source_name, error=str(e)
+            )
             return False

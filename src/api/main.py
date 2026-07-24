@@ -11,12 +11,12 @@ from typing import Any
 from datetime import datetime
 
 from src.storage.database import get_session
-from src.storage.models import Product, PriceRecord, PriceChange, Alert, PipelineRun
+from src.storage.models import Product, PriceRecord, PriceChange, Alert
 
 app = FastAPI(
     title="PricePulse Intelligence Platform API",
     description="REST API for accessing competitor price tracking, historical observations, and alert feeds.",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 
@@ -82,7 +82,12 @@ def health_check() -> dict[str, str]:
 def list_products(limit: int = Query(50, ge=1, le=200)) -> Any:
     """Retrieve list of tracked products."""
     with get_session() as session:
-        products = session.query(Product).order_by(Product.created_at.desc()).limit(limit).all()
+        products = (
+            session.query(Product)
+            .order_by(Product.created_at.desc())
+            .limit(limit)
+            .all()
+        )
         return [
             ProductOut(
                 id=str(p.id),
@@ -91,7 +96,7 @@ def list_products(limit: int = Query(50, ge=1, le=200)) -> Any:
                 brand=p.brand,
                 category=p.category,
                 url=p.url,
-                created_at=p.created_at
+                created_at=p.created_at,
             )
             for p in products
         ]
@@ -103,7 +108,9 @@ def get_price_history(sku: str) -> Any:
     with get_session() as session:
         product = session.query(Product).filter_by(sku=sku).first()
         if not product:
-            raise HTTPException(status_code=404, detail=f"Product with SKU '{sku}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Product with SKU '{sku}' not found"
+            )
 
         records = (
             session.query(PriceRecord)
@@ -118,7 +125,7 @@ def get_price_history(sku: str) -> Any:
                 price=float(r.price),
                 original_price=float(r.original_price),
                 scraped_at=r.scraped_at,
-                source_run_id=r.source_run_id
+                source_run_id=r.source_run_id,
             )
             for r in records
         ]
@@ -128,7 +135,12 @@ def get_price_history(sku: str) -> Any:
 def list_price_changes(limit: int = Query(50, ge=1, le=200)) -> Any:
     """Retrieve recent price changes across all products."""
     with get_session() as session:
-        changes = session.query(PriceChange).order_by(PriceChange.detected_at.desc()).limit(limit).all()
+        changes = (
+            session.query(PriceChange)
+            .order_by(PriceChange.detected_at.desc())
+            .limit(limit)
+            .all()
+        )
         return [
             PriceChangeOut(
                 id=str(c.id),
@@ -138,7 +150,7 @@ def list_price_changes(limit: int = Query(50, ge=1, le=200)) -> Any:
                 price_diff=float(c.price_diff),
                 pct_change=float(c.pct_change),
                 change_type=c.change_type,
-                detected_at=c.detected_at
+                detected_at=c.detected_at,
             )
             for c in changes
         ]
@@ -148,7 +160,9 @@ def list_price_changes(limit: int = Query(50, ge=1, le=200)) -> Any:
 def list_alerts(limit: int = Query(50, ge=1, le=200)) -> Any:
     """Retrieve recent alerts."""
     with get_session() as session:
-        alerts = session.query(Alert).order_by(Alert.created_at.desc()).limit(limit).all()
+        alerts = (
+            session.query(Alert).order_by(Alert.created_at.desc()).limit(limit).all()
+        )
         return [
             AlertOut(
                 id=str(a.id),
@@ -157,7 +171,7 @@ def list_alerts(limit: int = Query(50, ge=1, le=200)) -> Any:
                 severity=a.severity,
                 message=a.message,
                 is_acknowledged=a.is_acknowledged,
-                created_at=a.created_at
+                created_at=a.created_at,
             )
             for a in alerts
         ]

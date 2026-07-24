@@ -54,12 +54,12 @@ class Product(Base):
     brand: Mapped[str | None] = mapped_column(String(200), index=True)
     category: Mapped[str | None] = mapped_column(String(200), index=True)
     url: Mapped[str | None] = mapped_column(String(1000))
-    
+
     # Store flexible specs (RAM, storage, processor)
     attributes: Mapped[dict[str, Any]] = mapped_column(
         JSONB, server_default=text("'{}'::jsonb")
     )
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
@@ -124,13 +124,13 @@ class PriceRecord(Base):
     competitor_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("competitors.id", ondelete="CASCADE"), index=True
     )
-    
+
     # 12 digits total, 2 decimal places (up to $9,999,999,999.99)
     price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     original_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     currency: Mapped[str] = mapped_column(String(3), default="USD")
     in_stock: Mapped[bool] = mapped_column(Boolean, default=True)
-    
+
     scraped_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), index=True
     )
@@ -168,12 +168,12 @@ class PriceChange(Base):
     competitor_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("competitors.id", ondelete="CASCADE")
     )
-    
+
     old_price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     new_price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     price_diff: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     pct_change: Mapped[Decimal] = mapped_column(Numeric(8, 2))
-    
+
     change_type: Mapped[str] = mapped_column(String(20))  # drop, increase
     detected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), index=True
@@ -183,9 +183,7 @@ class PriceChange(Base):
     product: Mapped["Product"] = relationship(back_populates="price_changes")
 
     __table_args__ = (
-        CheckConstraint(
-            "change_type IN ('drop', 'increase')", name="ck_change_type"
-        ),
+        CheckConstraint("change_type IN ('drop', 'increase')", name="ck_change_type"),
         Index("idx_price_changes_type_date", "change_type", "detected_at"),
     )
 
@@ -203,19 +201,20 @@ class Alert(Base):
     price_change_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("price_changes.id", ondelete="SET NULL")
     )
-    
+
     alert_type: Mapped[str] = mapped_column(String(50))
     severity: Mapped[str] = mapped_column(String(20))
     message: Mapped[str] = mapped_column(String(1000))
     is_acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
 
     __table_args__ = (
         CheckConstraint(
-            "severity IN ('low', 'medium', 'high', 'critical')", name="ck_alert_severity"
+            "severity IN ('low', 'medium', 'high', 'critical')",
+            name="ck_alert_severity",
         ),
         Index("idx_alerts_unacked", "is_acknowledged", "created_at"),
     )
@@ -233,16 +232,16 @@ class PipelineRun(Base):
     )
     run_id: Mapped[str] = mapped_column(String(100), unique=True)
     status: Mapped[str] = mapped_column(String(20), default="running")
-    
+
     records_extracted: Mapped[int] = mapped_column(default=0)
     records_validated: Mapped[int] = mapped_column(default=0)
     records_stored: Mapped[int] = mapped_column(default=0)
     errors: Mapped[int] = mapped_column(default=0)
-    
+
     error_details: Mapped[list[Any]] = mapped_column(
         JSONB, server_default=text("'[]'::jsonb")
     )
-    
+
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )

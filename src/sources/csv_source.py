@@ -11,7 +11,6 @@ Engineering Decisions:
 """
 
 import csv
-import os
 from pathlib import Path
 from typing import Any
 
@@ -43,7 +42,7 @@ class CSVSource(BaseSource):
         Expects columns: sku, name, brand, category, url, price, original_price, in_stock
         """
         log.info("source.csv.extract_started", file=str(self.file_path))
-        
+
         if not await self.health_check():
             raise FileNotFoundError(f"CSV file not found: {self.file_path}")
 
@@ -62,16 +61,19 @@ class CSVSource(BaseSource):
                         "url": row.get("url", "").strip(),
                         "price": row.get("price"),
                         "original_price": row.get("original_price") or None,
-                        "in_stock": str(row.get("in_stock", "true")).lower() in ("true", "1", "yes"),
+                        "in_stock": str(row.get("in_stock", "true")).lower()
+                        in ("true", "1", "yes"),
                         "attributes": {},  # CSV doesn't easily store nested JSON
                     }
                     records.append(RawPriceRecord(**record_dict))
-                    
+
             log.info("source.csv.extract_success", records=len(records))
             return records
-            
+
         except Exception as e:
-            log.error("source.csv.extract_failed", error=str(e), file=str(self.file_path))
+            log.error(
+                "source.csv.extract_failed", error=str(e), file=str(self.file_path)
+            )
             raise
 
     async def health_check(self) -> bool:

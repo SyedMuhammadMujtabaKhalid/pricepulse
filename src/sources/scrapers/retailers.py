@@ -7,7 +7,6 @@ using Playwright browser automation.
 """
 
 import re
-from typing import Any
 from playwright.async_api import Page
 
 from src.core.logger import get_logger
@@ -20,7 +19,11 @@ log = get_logger(__name__)
 class NeweggScraper(PlaywrightScraperSource):
     """Scrapes live prices from Newegg product search/category listings."""
 
-    def __init__(self, target_url: str = "https://www.newegg.com/p/pl?d=laptop", source_name: str = "newegg"):
+    def __init__(
+        self,
+        target_url: str = "https://www.newegg.com/p/pl?d=laptop",
+        source_name: str = "newegg",
+    ):
         super().__init__(target_url, source_name)
 
     async def parse_page(self, page: Page) -> list[RawPriceRecord]:
@@ -56,7 +59,7 @@ class NeweggScraper(PlaywrightScraperSource):
                         price=price,
                         original_price=price,
                         in_stock=True,
-                        attributes={}
+                        attributes={},
                     )
                 )
             except Exception as e:
@@ -69,7 +72,11 @@ class NeweggScraper(PlaywrightScraperSource):
 class BHPhotoScraper(PlaywrightScraperSource):
     """Scrapes live prices from B&H Photo Video listings."""
 
-    def __init__(self, target_url: str = "https://www.bhphotovideo.com/c/browse/Computers-Subtitles/ci/28734", source_name: str = "bhphoto"):
+    def __init__(
+        self,
+        target_url: str = "https://www.bhphotovideo.com/c/browse/Computers-Subtitles/ci/28734",
+        source_name: str = "bhphoto",
+    ):
         super().__init__(target_url, source_name)
 
     async def parse_page(self, page: Page) -> list[RawPriceRecord]:
@@ -79,7 +86,9 @@ class BHPhotoScraper(PlaywrightScraperSource):
         items = await page.query_selector_all("[data-selenium='miniProductPage']")
         for item in items:
             try:
-                title_el = await item.query_selector("[data-selenium='miniProductPageName']")
+                title_el = await item.query_selector(
+                    "[data-selenium='miniProductPageName']"
+                )
                 price_el = await item.query_selector("[data-selenium='pricingPrice']")
                 if not title_el or not price_el:
                     continue
@@ -103,7 +112,7 @@ class BHPhotoScraper(PlaywrightScraperSource):
                         price=price,
                         original_price=price,
                         in_stock=True,
-                        attributes={}
+                        attributes={},
                     )
                 )
             except Exception as e:

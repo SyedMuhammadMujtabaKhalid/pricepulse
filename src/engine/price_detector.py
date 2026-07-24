@@ -41,10 +41,14 @@ class PriceChangeDetector:
 
         with get_session() as session:
             # Get all new price records from this run
-            new_records = session.query(PriceRecord).filter_by(source_run_id=run_id).all()
-            
+            new_records = (
+                session.query(PriceRecord).filter_by(source_run_id=run_id).all()
+            )
+
             if not new_records:
-                log.info("engine.detection.skipped", reason="No new records in this run")
+                log.info(
+                    "engine.detection.skipped", reason="No new records in this run"
+                )
                 return 0
 
             for new_record in new_records:
@@ -77,7 +81,7 @@ class PriceChangeDetector:
                     continue  # Price didn't change
 
                 pct_change = (diff / old_price) * Decimal("100")
-                
+
                 change_type = "drop" if diff < 0 else "increase"
 
                 # Materialize the change
@@ -91,25 +95,34 @@ class PriceChangeDetector:
                     change_type=change_type,
                 )
                 session.add(change)
-                session.flush() # Flush to get change.id for the alert
+                session.flush()  # Flush to get change.id for the alert
                 changes_detected += 1
 
                 # Generate Alert if significant drop
-                if change_type == "drop" and abs(pct_change) >= self.alert_threshold_pct:
-                    severity = "critical" if abs(pct_change) >= Decimal("15.0") else "high"
-                    
+                if (
+                    change_type == "drop"
+                    and abs(pct_change) >= self.alert_threshold_pct
+                ):
+                    severity = (
+                        "critical" if abs(pct_change) >= Decimal("15.0") else "high"
+                    )
+
                     alert = Alert(
                         price_change_id=change.id,
                         alert_type="price_drop",
                         severity=severity,
-                        message=f"PRICE DROP! Product ID {new_record.product_id} dropped by {abs(pct_change):.1f}% (now ${new_price})"
+                        message=f"PRICE DROP! Product ID {new_record.product_id} dropped by {abs(pct_change):.1f}% (now ${new_price})",
                     )
                     session.add(alert)
-                    session.flush() # Flush to populate alert id before dispatching
+                    session.flush()  # Flush to populate alert id before dispatching
                     self.dispatcher.dispatch(alert)
                     alerts_generated += 1
 
             session.commit()
-            
-        log.info("engine.detection.completed", changes=changes_detected, alerts=alerts_generated)
+
+        log.info(
+            "engine.detection.completed",
+            changes=changes_detected,
+            alerts=alerts_generated,
+        )
         return changes_detected

@@ -85,10 +85,10 @@ def get_engine() -> Engine:
         _engine = create_engine(
             database_url,
             # ── Pool configuration ──
-            pool_size=5,           # Baseline connections to keep open
-            max_overflow=10,       # Extra connections under load (total max: 15)
-            pool_pre_ping=True,    # Verify connection is alive before using it
-            pool_recycle=3600,     # Recycle connections after 1 hour (prevents stale)
+            pool_size=5,  # Baseline connections to keep open
+            max_overflow=10,  # Extra connections under load (total max: 15)
+            pool_pre_ping=True,  # Verify connection is alive before using it
+            pool_recycle=3600,  # Recycle connections after 1 hour (prevents stale)
             # ── Logging ──
             echo=settings.is_development and settings.log_level == "DEBUG",
         )
@@ -113,8 +113,8 @@ def get_session_factory() -> sessionmaker[Session]:
         engine = get_engine()
         _session_factory = sessionmaker(
             bind=engine,
-            autocommit=False,   # Explicit commits only
-            autoflush=False,    # Don't auto-flush before queries (predictable behavior)
+            autocommit=False,  # Explicit commits only
+            autoflush=False,  # Don't auto-flush before queries (predictable behavior)
             expire_on_commit=False,  # Keep objects usable after commit
         )
 

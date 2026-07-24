@@ -26,7 +26,6 @@ from pathlib import Path
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 # Project root directory (one level up from config/)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 

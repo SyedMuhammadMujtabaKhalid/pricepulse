@@ -1,2 +1,3 @@
-from .notifiers import BaseNotifier, ConsoleNotifier, SMTPNotifier, NotificationDispatcher
-__all__ = ["BaseNotifier", "ConsoleNotifier", "SMTPNotifier", "NotificationDispatcher"]
+from .notifiers import BaseNotifier, ConsoleNotifier, NotificationDispatcher
+
+__all__ = ["BaseNotifier", "ConsoleNotifier", "NotificationDispatcher"]

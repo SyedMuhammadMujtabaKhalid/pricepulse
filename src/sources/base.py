@@ -18,6 +18,7 @@ from typing import Any
 
 from src.quality.validators import RawPriceRecord
 
+
 class BaseSource(ABC):
     """
     Abstract interface for all data extraction sources.
@@ -43,10 +44,10 @@ class BaseSource(ABC):
     async def extract(self, **kwargs: Any) -> list[RawPriceRecord]:
         """
         Extract raw data from the source.
-        
+
         Returns:
             A list of validated RawPriceRecord models.
-            
+
         Raises:
             Exception: If extraction fundamentally fails.
         """

@@ -27,14 +27,13 @@ smoke test after project setup.
 import sys
 from pathlib import Path
 
-# ── Add project root to Python path ──────────────────────────
-# This allows imports from config/ and src/ when running as a script.
-project_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(project_root))
-
 from config.settings import get_settings
 from src.core.logger import setup_logging
 from src.storage.database import check_connection, get_db_version
+
+# Add project root to Python path (after imports)
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
 
 
 def main() -> None:
@@ -70,7 +69,9 @@ def main() -> None:
         print("     2. Is .env configured?")
         print("        → cp .env.example .env")
         print("     3. Is the port correct?")
-        print(f"        → Check POSTGRES_PORT in .env (current: {settings.postgres_port})")
+        print(
+            f"        → Check POSTGRES_PORT in .env (current: {settings.postgres_port})"
+        )
         print("     4. Is PostgreSQL accepting connections?")
         print("        → docker-compose logs db")
         print()
@@ -92,8 +93,10 @@ def main() -> None:
     # ── Summary ───────────────────────────────────────────────
     print()
     print("  " + "─" * 56)
-    print(f"  ✅ Database is ready: {settings.postgres_db} @ "
-          f"{settings.postgres_host}:{settings.postgres_port}")
+    print(
+        f"  ✅ Database is ready: {settings.postgres_db} @ "
+        f"{settings.postgres_host}:{settings.postgres_port}"
+    )
     print("  " + "─" * 56)
     print()
 

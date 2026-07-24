@@ -13,8 +13,18 @@ Engineering Decisions:
 
 from abc import abstractmethod
 from typing import Any
-from playwright.async_api import async_playwright, Page, BrowserContext, Error as PlaywrightError
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+from playwright.async_api import (
+    async_playwright,
+    Page,
+    BrowserContext,
+    Error as PlaywrightError,
+)
+from tenacity import (
+    retry,
+    wait_exponential,
+    stop_after_attempt,
+    retry_if_exception_type,
+)
 
 from config.settings import get_settings
 from src.core.logger import get_logger
@@ -34,7 +44,7 @@ class PlaywrightScraperSource(BaseSource):
         super().__init__()
         self.target_url = target_url
         self._source_name = source_name
-        
+
         settings = get_settings()
         self.headless = settings.scraper_headless
         self.timeout = settings.scraper_timeout_ms
@@ -59,44 +69,54 @@ class PlaywrightScraperSource(BaseSource):
         wait=wait_exponential(multiplier=1, min=2, max=10),
         stop=stop_after_attempt(3),
         retry=retry_if_exception_type(PlaywrightError),
-        reraise=True
+        reraise=True,
     )
     async def extract(self, **kwargs: Any) -> list[RawPriceRecord]:
         """
         Orchestrate the browser lifecycle and call the parser.
         """
-        log.info("source.scraper.extract_started", source=self.source_name, url=self.target_url)
-        
+        log.info(
+            "source.scraper.extract_started",
+            source=self.source_name,
+            url=self.target_url,
+        )
+
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=self.headless)
-                
+
                 # Use a context to spoof user agent and block images/fonts for speed
                 context: BrowserContext = await browser.new_context(
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                    viewport={"width": 1920, "height": 1080}
+                    viewport={"width": 1920, "height": 1080},
                 )
-                
+
                 # Block unnecessary resources to speed up scraping
                 await context.route("**/*", self._route_interceptor)
-                
+
                 page = await context.new_page()
                 page.set_default_timeout(self.timeout)
-                
+
                 # Navigate and wait for DOM content
                 log.debug("source.scraper.navigating", url=self.target_url)
                 await page.goto(self.target_url, wait_until="domcontentloaded")
-                
+
                 # Delegate to the child class to actually pull the data
                 records = await self.parse_page(page)
-                
+
                 await browser.close()
-                
-                log.info("source.scraper.extract_success", source=self.source_name, records=len(records))
+
+                log.info(
+                    "source.scraper.extract_success",
+                    source=self.source_name,
+                    records=len(records),
+                )
                 return records
-                
+
         except Exception as e:
-            log.error("source.scraper.extract_failed", source=self.source_name, error=str(e))
+            log.error(
+                "source.scraper.extract_failed", source=self.source_name, error=str(e)
+            )
             raise
 
     async def _route_interceptor(self, route: Any) -> None:
@@ -112,10 +132,13 @@ class PlaywrightScraperSource(BaseSource):
         (Kept simple; a real system might use a lightweight HTTP HEAD here instead of a full browser)
         """
         import httpx
+
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(self.target_url)
                 return response.status_code == 200
         except Exception as e:
-            log.warning("source.scraper.health_failed", source=self.source_name, error=str(e))
+            log.warning(
+                "source.scraper.health_failed", source=self.source_name, error=str(e)
+            )
             return False

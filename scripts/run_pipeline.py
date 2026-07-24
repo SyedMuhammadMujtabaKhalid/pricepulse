@@ -18,13 +18,18 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.core.logger import get_logger
 from src.storage.database import get_engine, Base
+
 # Import models so Base.metadata knows about all tables
 import src.storage.models  # noqa: F401
 from src.pipeline.runner import PricePulsePipeline
 from src.sources.csv_source import CSVSource
 from src.sources.api_source import APISource
 
-from src.notifications.notifiers import ConsoleNotifier, TelegramNotifier, DiscordWebhookNotifier, SMTPNotifier
+from src.notifications.notifiers import (
+    ConsoleNotifier,
+    TelegramNotifier,
+    DiscordWebhookNotifier,
+)
 from src.sources.ecom_scraper import ECommercePlaywrightScraper
 
 log = get_logger(__name__)
@@ -66,7 +71,9 @@ async def main():
     init_database()
 
     # Step 2: Configure sources
-    csv_path = os.path.join(os.path.dirname(__file__), "..", "sample_data", "laptops.csv")
+    csv_path = os.path.join(
+        os.path.dirname(__file__), "..", "sample_data", "laptops.csv"
+    )
 
     sources = [
         CSVSource(csv_path),
@@ -76,7 +83,9 @@ async def main():
     # Optional live web scraper source if target URL provided
     scraper_url = os.getenv("SCRAPER_TARGET_URL")
     if scraper_url:
-        sources.append(ECommercePlaywrightScraper(scraper_url, "live_playwright_scraper"))
+        sources.append(
+            ECommercePlaywrightScraper(scraper_url, "live_playwright_scraper")
+        )
         log.info("source.registered", type="playwright_scraper", url=scraper_url)
 
     notifiers = build_notifiers()

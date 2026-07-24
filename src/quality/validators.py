@@ -24,19 +24,27 @@ class RawPriceRecord(BaseModel):
     All data adapters (CSV, API, Scraper) must return dictionaries
     that conform to this schema.
     """
-    
-    sku: str = Field(..., min_length=1, max_length=100, description="Unique product identifier")
-    name: str = Field(..., min_length=1, max_length=500, description="Product display name")
+
+    sku: str = Field(
+        ..., min_length=1, max_length=100, description="Unique product identifier"
+    )
+    name: str = Field(
+        ..., min_length=1, max_length=500, description="Product display name"
+    )
     brand: str | None = Field(None, max_length=200)
     category: str | None = Field(None, max_length=200)
     url: HttpUrl | str | None = Field(None, description="Source URL")
-    
+
     price: Decimal = Field(..., ge=0, description="Current selling price")
-    original_price: Decimal | None = Field(None, ge=0, description="List/MSRP price if discounted")
+    original_price: Decimal | None = Field(
+        None, ge=0, description="List/MSRP price if discounted"
+    )
     currency: str = Field(default="USD", min_length=3, max_length=3)
     in_stock: bool = Field(default=True)
-    
-    attributes: dict[str, Any] = Field(default_factory=dict, description="Flexible JSON specs")
+
+    attributes: dict[str, Any] = Field(
+        default_factory=dict, description="Flexible JSON specs"
+    )
 
     @field_validator("sku")
     @classmethod
@@ -49,7 +57,7 @@ class RawPriceRecord(BaseModel):
     def strip_whitespace(cls, v: str | None) -> str | None:
         """Clean up messy text from scrapers."""
         return v.strip() if v else None
-        
+
     @field_validator("url")
     @classmethod
     def url_to_string(cls, v: HttpUrl | str | None) -> str | None:
@@ -72,6 +80,7 @@ class RawPriceRecord(BaseModel):
 
 class ValidationResult(BaseModel):
     """Result of validating a batch of records."""
+
     valid_records: list[RawPriceRecord]
     invalid_count: int
     errors: list[dict[str, Any]]

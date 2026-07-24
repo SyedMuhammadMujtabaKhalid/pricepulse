@@ -1,11 +1,4 @@
-import logging
 from logging.config import fileConfig
-import sys
-from pathlib import Path
-
-# Add project root to path so we can import from src and config
-project_root = Path(__file__).resolve().parent.parent.parent.parent
-sys.path.insert(0, str(project_root))
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -14,6 +7,7 @@ from alembic import context
 
 from config.settings import get_settings
 from src.storage.database import Base
+
 # IMPORTANT: Import models here so Alembic knows about them
 import src.storage.models  # noqa: F401
 
@@ -34,6 +28,7 @@ config.set_main_option("sqlalchemy.url", settings.get_database_url())
 # for 'autogenerate' support
 target_metadata = Base.metadata
 
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -53,6 +48,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
@@ -66,12 +62,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

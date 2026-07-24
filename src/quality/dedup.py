@@ -40,6 +40,10 @@ def deduplicate_records(records: list[RawPriceRecord]) -> list[RawPriceRecord]:
             unique_records[sku] = record
 
     if dupe_count > 0:
-        log.info("quality.dedup.removed", duplicates_removed=dupe_count, final_count=len(unique_records))
+        log.info(
+            "quality.dedup.removed",
+            duplicates_removed=dupe_count,
+            final_count=len(unique_records),
+        )
 
     return list(unique_records.values())
