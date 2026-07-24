@@ -22,15 +22,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install black pytest-asyncio
+        # Ensure entry‑point scripts (ruff, black) are on PATH
+        export PATH=$HOME/.local/bin:$PATH
+        pip install ruff black pytest-asyncio
         
     - name: Lint with Ruff
       run: |
-        ruff check .
+        python -m ruff check .
         
     - name: Format check with Black
       run: |
-        black --check .
+        python -m black --check .
         
     - name: Test with pytest
       run: |
