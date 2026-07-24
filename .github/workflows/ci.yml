@@ -45,7 +45,8 @@ jobs:
         # Ensure entry‑point scripts (ruff, black) are on PATH
         export PATH=$HOME/.local/bin:$PATH
         pip install ruff black pytest-asyncio
-        
+    - name: Run Alembic migrations
+      run: alembic upgrade head        
     - name: Lint with Ruff
       run: |
         python -m ruff check .
